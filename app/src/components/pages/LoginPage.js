@@ -1,58 +1,59 @@
 import React from 'react';
-import firebase from 'firebase'
-import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth'
+import PropTypes from 'prop-types'
+import { connect } from 'react-redux'
 
-firebase.initializeApp({
-  apiKey: "AIzaSyCgHldN657sZsi8-lkUVEQ4j2n0KyTySsU",
-  authDomain: "quotus-204705.firebaseapp.com"
-})
+import { Header, Modal } from 'semantic-ui-react'
+
+import { firebase } from '../../firebaseUtil'
+import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth'
+import { login } from '../../actions/auth'
 
 class LoginPage extends React.Component {
-  state = { isSignedIn: false }
 
-  componentDidMount = () => {
-    firebase.auth().onAuthStateChanged(user => {
-      this.setState({ isSignedIn: !!user })
-      // console.log("user", user)
-    })
-  }
-
-  uiConfig = {
-    signInFlow: "popup",
-    signInOptions: [
-      // firebase.auth.GoogleAuthProvider.PROVIDER_ID,
-      // firebase.auth.FacebookAuthProvider.PROVIDER_ID,
-      // firebase.auth.TwitterAuthProvider.PROVIDER_ID,
-      // firebase.auth.GithubAuthProvider.PROVIDER_ID,
-      firebase.auth.EmailAuthProvider.PROVIDER_ID
-    ],
-    callbacks: {
-      signInSuccess: () => false
+    uiConfig = {
+        signInFlow: "popup",
+        signInOptions: [
+            firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+            firebase.auth.FacebookAuthProvider.PROVIDER_ID,
+            firebase.auth.TwitterAuthProvider.PROVIDER_ID,
+            // firebase.auth.GithubAuthProvider.PROVIDER_ID,
+            firebase.auth.EmailAuthProvider.PROVIDER_ID
+        ],
+        callbacks: {
+            signInSuccess: () => {
+                this.props.history.push('/')
+            }
+        }
     }
-  }
 
-  render() {
-    return (
-      <div className="App">
-        {this.state.isSignedIn ? (
-          <span>
-            <div>Signed In!</div>
-            <button onClick={() => firebase.auth().signOut()}>Sign out!</button>
-            <h1>Welcome {firebase.auth().currentUser.displayName}</h1>
-            {/* <img
-              alt="profile picture"
-              src={firebase.auth().currentUser.photoURL}
-            /> */}
-          </span>
-        ) : (
-          <StyledFirebaseAuth
-            uiConfig={this.uiConfig}
-            firebaseAuth={firebase.auth()}
-          />
-        )}
-      </div>
-    )
-  }
+    render() {
+        return (
+            <Modal size="mini" open={true}>
+                <Header textAlign='center' color='grey'>Login/Sign up</Header>
+                <Modal.Content image>
+                    <div className="ui container">
+                        <StyledFirebaseAuth
+                            uiConfig={this.uiConfig}
+                            firebaseAuth={firebase.auth()} />
+                    </div>
+                </Modal.Content>
+            </Modal>
+        )
+    }
 }
 
-export default LoginPage;
+LoginPage.propTypes = {
+    history: PropTypes.shape({
+        push: PropTypes.func.isRequired
+    }).isRequired,
+    isAuthenticated: PropTypes.bool.isRequired
+}
+
+function mapStateToProps(state) {
+    console.log(state.user.uid)
+    return {
+      isAuthenticated: !!state.user.uid
+    };
+}
+
+export default connect(mapStateToProps, { login })(LoginPage);
